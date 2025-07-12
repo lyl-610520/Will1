@@ -1,0 +1,320 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', 'PingFang SC', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 动态背景（昼夜+天气） */
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(180deg, #FFD700, #87CEEB);
+  transition: background 1s ease;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 天气动画 */
+.weather-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+.weather-night .weather-overlay::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url('assets/stars.png') repeat;
+  opacity: 0.5;
+  animation: twinkle 10s infinite;
+}
+.weather-rain .weather-overlay::before {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  animation: rain 0.5s linear infinite;
+}
+.weather-snow .weather-overlay::before {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #fff;
+  border-radius: 50%;
+  animation: snow 2s linear infinite;
+}
+.weather-sunny .weather-overlay::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 0, 0.2) 0%, transparent 70%);
+  animation: sun-glow 5s infinite;
+}
+@keyframes twinkle { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+@keyframes rain { 0% { transform: translateY(-20px); opacity: 1; } 100% { transform: translateY(100vh); opacity: 0; } }
+@keyframes snow { 0% { transform: translateY(-20px); opacity: 1; } 100% { transform: translateY(100vh); opacity: 0; } }
+@keyframes sun-glow { 0% { opacity: 0.2; } 50% { opacity: 0.5; } 100% { opacity: 0.2; } }
+
+/* 主容器（毛玻璃+动态主题） */
+.container {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 20px;
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: opening 7s ease-in-out;
+}
+[data-motivation="high"] .container {
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.3), rgba(135, 206, 235, 0.1));
+}
+[data-motivation="low"] .container {
+  background: linear-gradient(145deg, rgba(128, 128, 128, 0.3), rgba(0, 0, 0, 0.1));
+}
+
+/* 时钟 */
+.clock {
+  margin: 20px auto;
+}
+.clock-face {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+#time-text {
+  font-family: 'Handwritten', cursive;
+  font-size: 20px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* 语言切换 */
+.lang-switch button {
+  background: linear-gradient(145deg, #4A90E2, #357ABD);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  padding: 8px 16px;
+  margin: 0 5px;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transform: perspective(500px) translateZ(0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.lang-switch button:hover {
+  transform: perspective(500px) translateZ(10px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 页面 */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+@keyframes fadeIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+
+/* 首页 */
+.greeting {
+  font-size: 24px;
+  color: #333;
+  margin: 20px 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.garden {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
+.flower {
+  width: 80px;
+  height: 80px;
+  background-size: cover;
+  animation: sway 3s infinite ease-in-out;
+}
+.flower.grow {
+  animation: grow 1s ease-in-out;
+}
+.pet {
+  width: 100px;
+  height: 100px;
+  background-size: cover;
+  margin: 20px auto;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+.pet:hover { transform: scale(1.1); }
+.motivation { font-size: 18px; color: #333; margin: 10px 0; }
+.bubble {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  padding: 10px;
+  max-width: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 150px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  animation: bubble-pop 0.5s ease-in-out;
+}
+@keyframes opening { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes sway { 0% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 100% { transform: rotate(5deg); } }
+@keyframes grow { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes bubble-pop { 0% { transform: translateX(-50%) scale(0.8); opacity: 0; } 100% { transform: translateX(-50%) scale(1); opacity: 1; } }
+
+/* 打卡页面 */
+.checkin-list { margin: 20px 0; }
+.checkin-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+.checkin-item span { font-size: 16px; color: #333; }
+.checkin-item button {
+  background: linear-gradient(145deg, #4A90E2, #357ABD);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transform: perspective(500px) translateZ(0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.checkin-item button:hover {
+  transform: perspective(500px) translateZ(10px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+.checkin-item input { border: 1px solid #ccc; border-radius: 8px; padding: 8px; width: 60%; }
+
+/* 统计页面 */
+.chart-tabs { margin: 10px 0; }
+.chart-tabs button {
+  background: linear-gradient(145deg, #4A90E2, #357ABD);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  padding: 8px 16px;
+  margin: 0 5px;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transform: perspective(500px) translateZ(0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.chart-tabs button:hover {
+  transform: perspective(500px) translateZ(10px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+canvas { max-width: 100%; height: auto; margin: 10px 0; }
+
+/* 成就页面 */
+.achievements-list { margin: 20px 0; }
+.achievement {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+.achievement.unlocked { animation: glow 1s ease-in-out; }
+.achievement span { font-size: 16px; color: #333; }
+.pet-dressup { margin: 20px 0; }
+.pet-dressup button {
+  background: linear-gradient(145deg, #4A90E2, #357ABD);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  padding: 8px 16px;
+  margin: 5px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transform: perspective(500px) translateZ(0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.pet-dressup button:hover {
+  transform: perspective(500px) translateZ(10px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+@keyframes glow { 0% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); } 50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); } 100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); } }
+
+/* 设置页面 */
+.settings-list { margin: 20px 0; }
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0;
+}
+.setting-item span { font-size: 16px; color: #333; }
+.setting-item input, .setting-item select { border: 1px solid #ccc; border-radius: 8px; padding: 8px; }
+
+/* 导航 */
+.nav button {
+  background: linear-gradient(145deg, #4A90E2, #357ABD);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transform: perspective(500px) translateZ(0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.nav button:hover {
+  transform: perspective(500px) translateZ(10px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 粒子效果 */
+.particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #FFD700;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  body { background: linear-gradient(180deg, #2C3E50, #000); }
+  .container { background: linear-gradient(145deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1)); color: #fff; }
+  .greeting, #time-text, .checkin-item span, .achievement span, .setting-item span { color: #fff; }
+  .checkin-item, .achievement, .setting-item { background: rgba(255, 255, 255, 0.2); }
+}
+
+/* 响应式（iPad） */
+@media (min-width: 768px) {
+  .container { max-width: 800px; }
+  .garden { justify-content: space-between; }
+  .checkin-list, .achievements-list, .settings-list { max-width: 600px; margin: 20px auto; }
+}
+
+/* A10X优化 */
+@media (max-width: 1024px) {
+  .flower { animation: sway 3s infinite ease-in-out alternate; }
+  .bubble, .particle { animation: none; }
+}
