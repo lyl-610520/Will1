@@ -42,7 +42,7 @@ const i18n = {
 // 天气API调用
 async function fetchWeather(apiKey) {
   try {
-    const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=auto:ip`);
+    const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${f080dd8eccd341b4a06152132251207}&q=auto:ip`);
     const data = await res.json();
     return data.current.condition.text.toLowerCase();
   } catch (e) {
@@ -99,7 +99,7 @@ function Home({ state, dispatch }) {
       autoplay: true
     });
 
-    fetchWeather('YOUR_API_KEY').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
+    fetchWeather('f080dd8eccd341b4a06152132251207').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
 
     const bubbleTimer = setInterval(() => {
       const messages = i18n[state.lang].bubble;
