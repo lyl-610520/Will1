@@ -6,6 +6,8 @@ self.addEventListener('install', e => {
         '/index.html',
         '/styles.css',
         '/app.js',
+        '/manifest.json',
+        '/service-worker.js',
         '/assets/sunflower.svg',
         '/assets/lavender.svg',
         '/assets/rose.svg',
