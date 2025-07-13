@@ -363,9 +363,13 @@ function App() {
       state.settings.theme;
 
     if (state.settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
-      const hours = new Date().getHours();
+      const now = new Date();
+      const hours = now.getHours();
       if (hours === 8 || hours === 14 || hours === 20) {
-        new Notification(i18n[state.lang].bubble[Math.floor(Math.random() * i18n[state.lang].bubble.length)]);
+        new Notification('时光花园提醒', {
+          body: i18n[state.lang].bubble[Math.floor(Math.random() * i18n[state.lang].bubble.length)],
+          icon: 'assets/icon.png'
+        });
       }
     }
   }, [state.settings]);
