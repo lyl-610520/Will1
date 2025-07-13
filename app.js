@@ -99,7 +99,7 @@ function Home({ state, dispatch }) {
       autoplay: true
     }).then(() => console.log('Lottie animation loaded'));
 
-    fetchWeather('YOUR_API_KEY').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
+    fetchWeather('f080dd8eccd341b4a06152132251207').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
 
     const bubbleTimer = setInterval(() => {
       const messages = i18n[state.lang].bubble;
