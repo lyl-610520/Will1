@@ -1,7 +1,6 @@
 // 全局变量赋值
 const React = window.React;
 const ReactDOM = window.ReactDOM;
-const { BrowserRouter, Routes, Route, useNavigate } = window.ReactRouterDOM;
 const Chart = window.Chart;
 const gsap = window.gsap;
 const lottie = window.lottie;
@@ -15,7 +14,8 @@ const initialState = {
   pet: localStorage.getItem('pet') || 'cat',
   dress: JSON.parse(localStorage.getItem('dress')) || { hat: false, shirt: false },
   settings: JSON.parse(localStorage.getItem('settings')) || { notifications: true, sound: true, theme: 'auto' },
-  weather: localStorage.getItem('weather') || 'sunny'
+  weather: localStorage.getItem('weather') || 'sunny',
+  currentPage: localStorage.getItem('currentPage') || 'home'
 };
 
 function reducer(state, action) {
@@ -29,6 +29,7 @@ function reducer(state, action) {
       case 'UPDATE_SETTINGS': localStorage.setItem('settings', JSON.stringify(action.payload)); return { ...state, settings: action.payload };
       case 'DECREMENT_MOTIVATION': const newMotivation = Math.max(state.motivation - 10, 0); localStorage.setItem('motivation', newMotivation); return { ...state, motivation: newMotivation };
       case 'SET_WEATHER': localStorage.setItem('weather', action.payload); return { ...state, weather: action.payload };
+      case 'SET_PAGE': localStorage.setItem('currentPage', action.payload); return { ...state, currentPage: action.payload };
       default: return state;
     }
   } catch (e) { console.error('状态更新错误:', e); return state; }
@@ -52,7 +53,7 @@ async function fetchWeather(apiKey) {
   }
 }
 
-// 时钟组件
+// 组件
 function Clock({ dispatch }) {
   const [time, setTime] = React.useState(new Date());
   React.useEffect(() => {
@@ -78,26 +79,24 @@ function Clock({ dispatch }) {
   );
 }
 
-// 首页
 function Home({ state, dispatch }) {
   const [bubble, setBubble] = React.useState('');
-  const navigate = useNavigate();
   const hours = new Date().getHours();
   const motivationStatus = state.motivation > 70 ? 'high' : state.motivation < 30 ? 'low' : 'normal';
 
   React.useEffect(() => {
-    console.log('Home component mounted, weather:', state.weather);
+    console.log('Home mounted, weather:', state.weather);
     gsap.from('.container', { opacity: 0, scale: 0.8, duration: 7, ease: 'power2.out' });
     gsap.from('.flower', { y: 100, opacity: 0, stagger: 0.5, duration: 2, delay: 1 });
     gsap.from('.pet', { x: 200, opacity: 0, duration: 2, delay: 3 });
 
     lottie.loadAnimation({
       container: document.querySelector('.opening-animation'),
-      path: 'assets/opening-animation.json',
+      path: '/assets/opening-animation.json',
       renderer: 'svg',
       loop: false,
       autoplay: true
-    }).then(() => console.log('Lottie animation loaded'));
+    }).then(() => console.log('Lottie loaded'));
 
     fetchWeather('f080dd8eccd341b4a06152132251207').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
 
@@ -146,26 +145,25 @@ function Home({ state, dispatch }) {
     }
   };
 
+  const navigate = (page) => dispatch({ type: 'SET_PAGE', payload: page });
+
   return React.createElement('div', { className: `page ${state.weather}`, 'data-motivation': motivationStatus },
     React.createElement('div', { className: 'opening-animation' }),
     React.createElement('div', { className: 'greeting' }, hours < 12 ? i18n[state.lang].greeting.morning : hours < 18 ? i18n[state.lang].greeting.afternoon : i18n[state.lang].greeting.evening),
     React.createElement('div', { className: 'garden' },
-      React.createElement('div', { className: 'flower', 'data-type': 'study', style: { backgroundImage: `url('assets/sunflower.svg')` }, onClick: () => handleCheckIn('study') }),
-      React.createElement('div', { className: 'flower', 'data-type': 'sleep', style: { backgroundImage: `url('assets/lavender.svg')` }, onClick: () => handleCheckIn('sleep') }),
-      React.createElement('div', { className: 'flower', 'data-type': 'work', style: { backgroundImage: `url('assets/rose.svg')` }, onClick: () => handleCheckIn('work') })
+      React.createElement('div', { className: 'flower', 'data-type': 'study', style: { backgroundImage: `url('/assets/sunflower.svg')` }, onClick: () => handleCheckIn('study') }),
+      React.createElement('div', { className: 'flower', 'data-type': 'sleep', style: { backgroundImage: `url('/assets/lavender.svg')` }, onClick: () => handleCheckIn('sleep') }),
+      React.createElement('div', { className: 'flower', 'data-type': 'work', style: { backgroundImage: `url('/assets/rose.svg')` }, onClick: () => handleCheckIn('work') })
     ),
-    React.createElement('div', { className: 'pet', style: { backgroundImage: `url('assets/pet-${state.pet}${state.dress.hat ? '-hat' : ''}.svg')` }, onClick: () => {
-      gsap.to('.pet', { rotation: 360, duration: 1 });
-      navigate('/achievements');
-    } }),
+    React.createElement('div', { className: 'pet', style: { backgroundImage: `url('/assets/pet-${state.pet}${state.dress.hat ? '-hat' : ''}.svg')` }, onClick: () => navigate('achievements') }),
     bubble && React.createElement('div', { className: 'bubble' }, React.createElement('span', null, bubble)),
     React.createElement('div', { className: 'motivation' }, `动力值: ${state.motivation}`)
   );
 }
 
-// 打卡页面
 function CheckIn({ state, dispatch }) {
   const [customType, setCustomType] = React.useState('');
+  const navigate = (page) => dispatch({ type: 'SET_PAGE', payload: page });
 
   const handleCheckIn = (type) => {
     dispatch({ type: 'CHECK_IN', payload: { type, time: new Date().toISOString() } });
@@ -214,12 +212,14 @@ function CheckIn({ state, dispatch }) {
         React.createElement('input', { type: 'text', value: customType, onChange: e => setCustomType(e.target.value), placeholder: i18n[state.lang].checkin }),
         React.createElement('button', { onClick: addCustom }, '添加')
       )
-    )
+    ),
+    React.createElement('button', { onClick: () => navigate('home') }, '返回')
   );
 }
 
-// 统计页面
 function Stats({ state }) {
+  const navigate = (page) => dispatch({ type: 'SET_PAGE', payload: page });
+
   React.useEffect(() => {
     const ctx1 = document.getElementById('stats-chart-sleep').getContext('2d');
     new Chart(ctx1, {
@@ -249,16 +249,17 @@ function Stats({ state }) {
       React.createElement('button', null, '每周'),
       React.createElement('button', null, '每月')
     ),
-    React.createElement('canvas', { id: 'stats-chart-sleep' })
+    React.createElement('canvas', { id: 'stats-chart-sleep' }),
+    React.createElement('button', { onClick: () => navigate('home') }, '返回')
   );
 }
 
-// 成就页面
 function Achievements({ state, dispatch }) {
   const achievements = [
     { id: 'study7', zh: '7天学习达人', en: '7-Day Study Master', condition: state.checkins.study.length >= 7 },
     { id: 'streak30', zh: '连续打卡30天', en: '30-Day Streak', condition: state.checkins.study.length >= 30 }
   ];
+  const navigate = (page) => dispatch({ type: 'SET_PAGE', payload: page });
 
   React.useEffect(() => {
     achievements.forEach(a => {
@@ -296,12 +297,14 @@ function Achievements({ state, dispatch }) {
         React.createElement('button', { onClick: () => dispatch({ type: 'SET_DRESS', payload: 'hat' }) }, '帽子'),
         React.createElement('button', { onClick: () => dispatch({ type: 'SET_DRESS', payload: 'shirt' }) }, '衣服')
       )
-    )
+    ),
+    React.createElement('button', { onClick: () => navigate('home') }, '返回')
   );
 }
 
-// 设置页面
 function Settings({ state, dispatch }) {
+  const navigate = (page) => dispatch({ type: 'SET_PAGE', payload: page });
+
   const handleSettingsChange = (key, value) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: { ...state.settings, [key]: value } });
     if (state.settings.sound && key === 'sound' && value) {
@@ -337,12 +340,13 @@ function Settings({ state, dispatch }) {
           )
         )
       )
-    )
+    ),
+    React.createElement('button', { onClick: () => navigate('home') }, '返回')
   );
 }
 
-// 小游戏
 function Game({ state, dispatch }) {
+  const navigate = (page) => dispatch({ type: 'SET_PAGE', payload: page });
   const canvasRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -392,7 +396,8 @@ function Game({ state, dispatch }) {
 
   return React.createElement('div', { className: 'page' },
     React.createElement('h2', null, i18n[state.lang].checkin + ' - 花瓣游戏'),
-    React.createElement('canvas', { ref: canvasRef, width: '400', height: '400' })
+    React.createElement('canvas', { ref: canvasRef, width: '400', height: '400' }),
+    React.createElement('button', { onClick: () => navigate('home') }, '返回')
   );
 }
 
@@ -411,35 +416,38 @@ function App() {
       if (hours === 8 || hours === 14 || hours === 20) {
         new Notification('时光花园提醒', {
           body: i18n[state.lang].bubble[Math.floor(Math.random() * i18n[state.lang].bubble.length)],
-          icon: 'assets/icon.svg'
+          icon: '/assets/icon.svg'
         });
       }
     }
   }, [state.settings]);
 
-  return React.createElement(BrowserRouter, null,
-    React.createElement('div', { className: 'container' },
-      React.createElement(Clock, { dispatch: dispatch }),
-      React.createElement('div', { className: 'lang-switch' },
-        React.createElement('button', { onClick: () => dispatch({ type: 'SET_LANG', payload: 'zh' }) }, '中文'),
-        React.createElement('button', { onClick: () => dispatch({ type: 'SET_LANG', payload: 'en' }) }, 'English')
-      ),
-      React.createElement(Routes, null,
-        React.createElement(Route, { path: '/', element: React.createElement(Home, { state: state, dispatch: dispatch }) }),
-        React.createElement(Route, { path: '/checkin', element: React.createElement(CheckIn, { state: state, dispatch: dispatch }) }),
-        React.createElement(Route, { path: '/stats', element: React.createElement(Stats, { state: state }) }),
-        React.createElement(Route, { path: '/achievements', element: React.createElement(Achievements, { state: state, dispatch: dispatch }) }),
-        React.createElement(Route, { path: '/settings', element: React.createElement(Settings, { state: state, dispatch: dispatch }) }),
-        React.createElement(Route, { path: '/game', element: React.createElement(Game, { state: state, dispatch: dispatch }) })
-      ),
-      React.createElement('div', { className: 'nav' },
-        React.createElement('button', { onClick: () => window.location.href = '/' }, '首页'),
-        React.createElement('button', { onClick: () => window.location.href = '/checkin' }, '打卡'),
-        React.createElement('button', { onClick: () => window.location.href = '/stats' }, '统计'),
-        React.createElement('button', { onClick: () => window.location.href = '/achievements' }, '成就'),
-        React.createElement('button', { onClick: () => window.location.href = '/settings' }, '设置'),
-        React.createElement('button', { onClick: () => window.location.href = '/game' }, '游戏')
-      )
+  const renderPage = () => {
+    switch (state.currentPage) {
+      case 'home': return React.createElement(Home, { state, dispatch });
+      case 'checkin': return React.createElement(CheckIn, { state, dispatch });
+      case 'stats': return React.createElement(Stats, { state });
+      case 'achievements': return React.createElement(Achievements, { state, dispatch });
+      case 'settings': return React.createElement(Settings, { state, dispatch });
+      case 'game': return React.createElement(Game, { state, dispatch });
+      default: return React.createElement(Home, { state, dispatch });
+    }
+  };
+
+  return React.createElement('div', { className: 'container' },
+    React.createElement(Clock, { dispatch: dispatch }),
+    React.createElement('div', { className: 'lang-switch' },
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_LANG', payload: 'zh' }) }, '中文'),
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_LANG', payload: 'en' }) }, 'English')
+    ),
+    renderPage(),
+    React.createElement('div', { className: 'nav' },
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_PAGE', payload: 'home' }) }, '首页'),
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_PAGE', payload: 'checkin' }) }, '打卡'),
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_PAGE', payload: 'stats' }) }, '统计'),
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_PAGE', payload: 'achievements' }) }, '成就'),
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_PAGE', payload: 'settings' }) }, '设置'),
+      React.createElement('button', { onClick: () => dispatch({ type: 'SET_PAGE', payload: 'game' }) }, '游戏')
     )
   );
 }
@@ -448,4 +456,5 @@ try {
   ReactDOM.render(React.createElement(App), document.getElementById('main-container'));
 } catch (e) {
   console.error('Render error:', e);
+  document.body.innerHTML += '<div style="color:red">渲染失败，请检查控制台！</div>';
 }
