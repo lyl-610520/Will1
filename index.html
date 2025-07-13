@@ -10,13 +10,14 @@
 </head>
 <body>
   <div id="main-container"></div>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/chart.js@4/dist/chart.umd.js"></script>
-  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-  <script src="https://unpkg.com/lottie-web@5/build/player/lottie.min.js"></script>
-  <script src="/app.js"></script>
-  <script>
+  <script type="module">
+    import React from 'https://esm.sh/react@18';
+    import ReactDOM from 'https://esm.sh/react-dom@18';
+    import { BrowserRouter, Routes, Route, useNavigate } from 'https://esm.sh/react-router-dom@6';
+    import Chart from 'https://esm.sh/chart.js@4';
+    import { gsap } from 'https://esm.sh/gsap@3';
+    import lottie from 'https://esm.sh/lottie-web@5';
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then(() => console.log('Service Worker registered')).catch(err => console.error('Service Worker error:', err));
     }
@@ -24,11 +25,12 @@
       Notification.requestPermission().then(permission => console.log('Notification permission:', permission));
     }
     window.addEventListener('load', () => {
-      console.log('Page loaded, React:', window.React, 'Container:', document.getElementById('main-container'));
-      if (!window.React || !document.getElementById('main-container')) {
+      console.log('Page loaded, React:', React, 'Container:', document.getElementById('main-container'));
+      if (!React || !document.getElementById('main-container')) {
         document.body.innerHTML += '<div style="color:red">加载错误，请检查控制台！</div>';
       }
     });
   </script>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>
