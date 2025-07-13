@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useReducer, useRef } from 'https://esm.sh/react@18';
-import ReactDOM from 'https://esm.sh/react-dom@18';
-import { BrowserRouter, Routes, Route, useNavigate } from 'https://esm.sh/react-router-dom@6';
-import Chart from 'https://esm.sh/chart.js@4';
-import { gsap } from 'https://esm.sh/gsap@3';
-import lottie from 'https://esm.sh/lottie-web@5';
+// 全局变量赋值
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+const { BrowserRouter, Routes, Route, useNavigate } = window.ReactRouterDOM;
+const Chart = window.Chart;
+const gsap = window.gsap;
+const lottie = window.lottie;
 
 // 状态管理
 const initialState = {
@@ -53,8 +54,8 @@ async function fetchWeather(apiKey) {
 
 // 时钟组件
 function Clock({ dispatch }) {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
+  const [time, setTime] = React.useState(new Date());
+  React.useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -66,27 +67,26 @@ function Clock({ dispatch }) {
   const minuteDeg = minutes * 6;
   const secondDeg = seconds * 6;
 
-  return (
-    <div className="clock">
-      <svg className="clock-face" width="100" height="100" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="45" fill="none" stroke="#333" strokeWidth="4" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"/>
-        <line id="hour-hand" x1="50" y1="50" x2="50" y2="30" stroke="#333" strokeWidth="4" transform={`rotate(${hourDeg} 50 50)`}/>
-        <line id="minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="#333" strokeWidth="2" transform={`rotate(${minuteDeg} 50 50)`}/>
-        <line id="second-hand" x1="50" y1="50" x2="50" y2="25" stroke="#FF4500" strokeWidth="1" transform={`rotate(${secondDeg} 50 50)`}/>
-      </svg>
-      <span id="time-text">{`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`}</span>
-    </div>
+  return React.createElement('div', { className: 'clock' },
+    React.createElement('svg', { className: 'clock-face', width: '100', height: '100', viewBox: '0 0 100 100' },
+      React.createElement('circle', { cx: '50', cy: '50', r: '45', fill: 'none', stroke: '#333', strokeWidth: '4', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }),
+      React.createElement('line', { id: 'hour-hand', x1: '50', y1: '50', x2: '50', y2: '30', stroke: '#333', strokeWidth: '4', transform: `rotate(${hourDeg} 50 50)` }),
+      React.createElement('line', { id: 'minute-hand', x1: '50', y1: '50', x2: '50', y2: '20', stroke: '#333', strokeWidth: '2', transform: `rotate(${minuteDeg} 50 50)` }),
+      React.createElement('line', { id: 'second-hand', x1: '50', y1: '50', x2: '50', y2: '25', stroke: '#FF4500', strokeWidth: '1', transform: `rotate(${secondDeg} 50 50)` })
+    ),
+    React.createElement('span', { id: 'time-text' }, `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`)
   );
 }
 
 // 首页
 function Home({ state, dispatch }) {
-  const [bubble, setBubble] = useState('');
+  const [bubble, setBubble] = React.useState('');
   const navigate = useNavigate();
   const hours = new Date().getHours();
   const motivationStatus = state.motivation > 70 ? 'high' : state.motivation < 30 ? 'low' : 'normal';
 
-  useEffect(() => {
+  React.useEffect(() => {
+    console.log('Home component mounted, weather:', state.weather);
     gsap.from('.container', { opacity: 0, scale: 0.8, duration: 7, ease: 'power2.out' });
     gsap.from('.flower', { y: 100, opacity: 0, stagger: 0.5, duration: 2, delay: 1 });
     gsap.from('.pet', { x: 200, opacity: 0, duration: 2, delay: 3 });
@@ -97,9 +97,9 @@ function Home({ state, dispatch }) {
       renderer: 'svg',
       loop: false,
       autoplay: true
-    });
+    }).then(() => console.log('Lottie animation loaded'));
 
-    fetchWeather('f080dd8eccd341b4a06152132251207').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
+    fetchWeather('YOUR_API_KEY').then(weather => dispatch({ type: 'SET_WEATHER', payload: weather }));
 
     const bubbleTimer = setInterval(() => {
       const messages = i18n[state.lang].bubble;
@@ -131,32 +131,41 @@ function Home({ state, dispatch }) {
         gsap.to(particle, { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100, opacity: 0, duration: 1, onComplete: () => particle.remove() });
       }
       if ('vibrate' in navigator) navigator.vibrate(100);
-      if (state.settings.sound) new Audio('assets/sound-wind.mp3').play();
+      if (state.settings.sound) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.start();
+        setTimeout(() => { oscillator.stop(); }, 500);
+      }
     }
   };
 
-  return (
-    <div className={`page ${state.weather}`} data-motivation={motivationStatus}>
-      <div className="opening-animation"></div>
-      <div className="greeting">{hours < 12 ? i18n[state.lang].greeting.morning : hours < 18 ? i18n[state.lang].greeting.afternoon : i18n[state.lang].greeting.evening}</div>
-      <div className="garden">
-        <div className="flower" data-type="study" style={{ backgroundImage: `url('assets/sunflower.svg')` }} onClick={() => handleCheckIn('study')}></div>
-        <div className="flower" data-type="sleep" style={{ backgroundImage: `url('assets/lavender.svg')` }} onClick={() => handleCheckIn('sleep')}></div>
-        <div className="flower" data-type="work" style={{ backgroundImage: `url('assets/rose.svg')` }} onClick={() => handleCheckIn('work')}></div>
-      </div>
-      <div className="pet" style={{ backgroundImage: `url('assets/pet-${state.pet}${state.dress.hat ? '-hat' : ''}.svg')` }} onClick={() => {
-        gsap.to('.pet', { rotation: 360, duration: 1 });
-        navigate('/achievements');
-      }}></div>
-      {bubble && <div className="bubble"><span>{bubble}</span></div>}
-      <div className="motivation">动力值: <span>{state.motivation}</span></div>
-    </div>
+  return React.createElement('div', { className: `page ${state.weather}`, 'data-motivation': motivationStatus },
+    React.createElement('div', { className: 'opening-animation' }),
+    React.createElement('div', { className: 'greeting' }, hours < 12 ? i18n[state.lang].greeting.morning : hours < 18 ? i18n[state.lang].greeting.afternoon : i18n[state.lang].greeting.evening),
+    React.createElement('div', { className: 'garden' },
+      React.createElement('div', { className: 'flower', 'data-type': 'study', style: { backgroundImage: `url('assets/sunflower.svg')` }, onClick: () => handleCheckIn('study') }),
+      React.createElement('div', { className: 'flower', 'data-type': 'sleep', style: { backgroundImage: `url('assets/lavender.svg')` }, onClick: () => handleCheckIn('sleep') }),
+      React.createElement('div', { className: 'flower', 'data-type': 'work', style: { backgroundImage: `url('assets/rose.svg')` }, onClick: () => handleCheckIn('work') })
+    ),
+    React.createElement('div', { className: 'pet', style: { backgroundImage: `url('assets/pet-${state.pet}${state.dress.hat ? '-hat' : ''}.svg')` }, onClick: () => {
+      gsap.to('.pet', { rotation: 360, duration: 1 });
+      navigate('/achievements');
+    } }),
+    bubble && React.createElement('div', { className: 'bubble' }, React.createElement('span', null, bubble)),
+    React.createElement('div', { className: 'motivation' }, `动力值: ${state.motivation}`)
   );
 }
 
 // 打卡页面
 function CheckIn({ state, dispatch }) {
-  const [customType, setCustomType] = useState('');
+  const [customType, setCustomType] = React.useState('');
 
   const handleCheckIn = (type) => {
     dispatch({ type: 'CHECK_IN', payload: { type, time: new Date().toISOString() } });
@@ -170,7 +179,18 @@ function CheckIn({ state, dispatch }) {
         gsap.to(particle, { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100, opacity: 0, duration: 1, onComplete: () => particle.remove() });
       }
       if ('vibrate' in navigator) navigator.vibrate(100);
-      if (state.settings.sound) new Audio('assets/sound-wind.mp3').play();
+      if (state.settings.sound) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.start();
+        setTimeout(() => { oscillator.stop(); }, 500);
+      }
     }
   };
 
@@ -181,28 +201,26 @@ function CheckIn({ state, dispatch }) {
     }
   };
 
-  return (
-    <div className="page">
-      <h2>{i18n[state.lang].checkin}</h2>
-      <div className="checkin-list">
-        {['study', 'sleep', 'work', ...Object.keys(state.checkins).filter(k => k.startsWith('custom'))].map(type => (
-          <div className="checkin-item" key={type}>
-            <span>{type}</span>
-            <button onClick={() => handleCheckIn(type)}>{i18n[state.lang].checkin}</button>
-          </div>
-        ))}
-        <div className="checkin-item">
-          <input type="text" value={customType} onChange={e => setCustomType(e.target.value)} placeholder={i18n[state.lang].checkin} />
-          <button onClick={addCustom}>添加</button>
-        </div>
-      </div>
-    </div>
+  return React.createElement('div', { className: 'page' },
+    React.createElement('h2', null, i18n[state.lang].checkin),
+    React.createElement('div', { className: 'checkin-list' },
+      ['study', 'sleep', 'work', ...Object.keys(state.checkins).filter(k => k.startsWith('custom'))].map(type =>
+        React.createElement('div', { className: 'checkin-item', key: type },
+          React.createElement('span', null, type),
+          React.createElement('button', { onClick: () => handleCheckIn(type) }, i18n[state.lang].checkin)
+        )
+      ),
+      React.createElement('div', { className: 'checkin-item' },
+        React.createElement('input', { type: 'text', value: customType, onChange: e => setCustomType(e.target.value), placeholder: i18n[state.lang].checkin }),
+        React.createElement('button', { onClick: addCustom }, '添加')
+      )
+    )
   );
 }
 
 // 统计页面
 function Stats({ state }) {
-  useEffect(() => {
+  React.useEffect(() => {
     const ctx1 = document.getElementById('stats-chart-sleep').getContext('2d');
     new Chart(ctx1, {
       type: 'line',
@@ -224,16 +242,14 @@ function Stats({ state }) {
     });
   }, [state.lang, state.checkins]);
 
-  return (
-    <div className="page">
-      <h2>{i18n[state.lang].stats}</h2>
-      <div className="chart-tabs">
-        <button>每日</button>
-        <button>每周</button>
-        <button>每月</button>
-      </div>
-      <canvas id="stats-chart-sleep"></canvas>
-    </div>
+  return React.createElement('div', { className: 'page' },
+    React.createElement('h2', null, i18n[state.lang].stats),
+    React.createElement('div', { className: 'chart-tabs' },
+      React.createElement('button', null, '每日'),
+      React.createElement('button', null, '每周'),
+      React.createElement('button', null, '每月')
+    ),
+    React.createElement('canvas', { id: 'stats-chart-sleep' })
   );
 }
 
@@ -244,34 +260,43 @@ function Achievements({ state, dispatch }) {
     { id: 'streak30', zh: '连续打卡30天', en: '30-Day Streak', condition: state.checkins.study.length >= 30 }
   ];
 
-  useEffect(() => {
+  React.useEffect(() => {
     achievements.forEach(a => {
       if (a.condition && !state.achievements.includes(a.id)) {
         dispatch({ type: 'ADD_ACHIEVEMENT', payload: a.id });
-        if (state.settings.sound) new Audio('assets/sound-wind.mp3').play();
+        if (state.settings.sound) {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          oscillator.start();
+          setTimeout(() => { oscillator.stop(); }, 500);
+        }
       }
     });
   }, [state.checkins]);
 
-  return (
-    <div className="page">
-      <h2>{i18n[state.lang].achievements}</h2>
-      <div className="achievements-list">
-        {achievements.map(a => (
-          <div className={`achievement ${state.achievements.includes(a.id) ? 'unlocked' : ''}`} key={a.id}>
-            <span>{i18n[state.lang][a.id] || a[state.lang]}</span>
-            <span className="status">{state.achievements.includes(a.id) ? '已解锁' : '未解锁'}</span>
-          </div>
-        ))}
-      </div>
-      <div className="pet-dressup">
-        <h3>{i18n[state.lang].achievements}</h3>
-        <div className="dressup-options">
-          <button onClick={() => dispatch({ type: 'SET_DRESS', payload: 'hat' })}>帽子</button>
-          <button onClick={() => dispatch({ type: 'SET_DRESS', payload: 'shirt' })}>衣服</button>
-        </div>
-      </div>
-    </div>
+  return React.createElement('div', { className: 'page' },
+    React.createElement('h2', null, i18n[state.lang].achievements),
+    React.createElement('div', { className: 'achievements-list' },
+      achievements.map(a =>
+        React.createElement('div', { className: `achievement ${state.achievements.includes(a.id) ? 'unlocked' : ''}`, key: a.id },
+          React.createElement('span', null, i18n[state.lang][a.id] || a[state.lang]),
+          React.createElement('span', { className: 'status' }, state.achievements.includes(a.id) ? '已解锁' : '未解锁')
+        )
+      )
+    ),
+    React.createElement('div', { className: 'pet-dressup' },
+      React.createElement('h3', null, i18n[state.lang].achievements),
+      React.createElement('div', { className: 'dressup-options' },
+        React.createElement('button', { onClick: () => dispatch({ type: 'SET_DRESS', payload: 'hat' }) }, '帽子'),
+        React.createElement('button', { onClick: () => dispatch({ type: 'SET_DRESS', payload: 'shirt' }) }, '衣服')
+      )
+    )
   );
 }
 
@@ -279,39 +304,48 @@ function Achievements({ state, dispatch }) {
 function Settings({ state, dispatch }) {
   const handleSettingsChange = (key, value) => {
     dispatch({ type: 'UPDATE_SETTINGS', payload: { ...state.settings, [key]: value } });
-    if (state.settings.sound && key === 'sound' && value) new Audio('assets/sound-wind.mp3').play();
+    if (state.settings.sound && key === 'sound' && value) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.start();
+      setTimeout(() => { oscillator.stop(); }, 500);
+    }
   };
 
-  return (
-    <div className="page">
-      <h2>{i18n[state.lang].settings}</h2>
-      <div className="settings-list">
-        <div className="setting-item">
-          <span>{i18n[state.lang].notifications}</span>
-          <input type="checkbox" checked={state.settings.notifications} onChange={e => handleSettingsChange('notifications', e.target.checked)} />
-        </div>
-        <div className="setting-item">
-          <span>{i18n[state.lang].sound}</span>
-          <input type="checkbox" checked={state.settings.sound} onChange={e => handleSettingsChange('sound', e.target.checked)} />
-        </div>
-        <div className="setting-item">
-          <span>{i18n[state.lang].theme}</span>
-          <select value={state.settings.theme} onChange={e => handleSettingsChange('theme', e.target.value)}>
-            {Object.keys(i18n[state.lang].themeOptions).map(key => (
-              <option key={key} value={key}>{i18n[state.lang].themeOptions[key]}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </div>
+  return React.createElement('div', { className: 'page' },
+    React.createElement('h2', null, i18n[state.lang].settings),
+    React.createElement('div', { className: 'settings-list' },
+      React.createElement('div', { className: 'setting-item' },
+        React.createElement('span', null, i18n[state.lang].notifications),
+        React.createElement('input', { type: 'checkbox', checked: state.settings.notifications, onChange: e => handleSettingsChange('notifications', e.target.checked) })
+      ),
+      React.createElement('div', { className: 'setting-item' },
+        React.createElement('span', null, i18n[state.lang].sound),
+        React.createElement('input', { type: 'checkbox', checked: state.settings.sound, onChange: e => handleSettingsChange('sound', e.target.checked) })
+      ),
+      React.createElement('div', { className: 'setting-item' },
+        React.createElement('span', null, i18n[state.lang].theme),
+        React.createElement('select', { value: state.settings.theme, onChange: e => handleSettingsChange('theme', e.target.value) },
+          Object.keys(i18n[state.lang].themeOptions).map(key =>
+            React.createElement('option', { key: key, value: key }, i18n[state.lang].themeOptions[key])
+          )
+        )
+      )
+    )
   );
 }
 
 // 小游戏
 function Game({ state, dispatch }) {
-  const canvasRef = useRef(null);
+  const canvasRef = React.useRef(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const particles = [];
@@ -339,25 +373,34 @@ function Game({ state, dispatch }) {
       const rect = canvas.getBoundingClientRect();
       addParticle(e.clientX - rect.left, e.clientY - rect.top);
       if ('vibrate' in navigator) navigator.vibrate(50);
-      if (state.settings.sound) new Audio('assets/sound-wind.mp3').play();
+      if (state.settings.sound) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.start();
+        setTimeout(() => { oscillator.stop(); }, 500);
+      }
     });
 
     animate();
   }, [state.settings.sound]);
 
-  return (
-    <div className="page">
-      <h2>{i18n[state.lang].checkin} - 花瓣游戏</h2>
-      <canvas ref={canvasRef} width="400" height="400"></canvas>
-    </div>
+  return React.createElement('div', { className: 'page' },
+    React.createElement('h2', null, i18n[state.lang].checkin + ' - 花瓣游戏'),
+    React.createElement('canvas', { ref: canvasRef, width: '400', height: '400' })
   );
 }
 
 // 主应用
 function App() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = React.useReducer(reducer, initialState);
 
-  useEffect(() => {
+  React.useEffect(() => {
     document.body.className = state.settings.theme === 'auto' ?
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') :
       state.settings.theme;
@@ -368,39 +411,41 @@ function App() {
       if (hours === 8 || hours === 14 || hours === 20) {
         new Notification('时光花园提醒', {
           body: i18n[state.lang].bubble[Math.floor(Math.random() * i18n[state.lang].bubble.length)],
-          icon: 'assets/icon.png'
+          icon: 'assets/icon.svg'
         });
       }
     }
   }, [state.settings]);
 
-  return (
-    <BrowserRouter>
-      <div className="container">
-        <Clock dispatch={dispatch} />
-        <div className="lang-switch">
-          <button onClick={() => dispatch({ type: 'SET_LANG', payload: 'zh' })}>中文</button>
-          <button onClick={() => dispatch({ type: 'SET_LANG', payload: 'en' })}>English</button>
-        </div>
-        <Routes>
-          <Route path="/" element={<Home state={state} dispatch={dispatch} />} />
-          <Route path="/checkin" element={<CheckIn state={state} dispatch={dispatch} />} />
-          <Route path="/stats" element={<Stats state={state} />} />
-          <Route path="/achievements" element={<Achievements state={state} dispatch={dispatch} />} />
-          <Route path="/settings" element={<Settings state={state} dispatch={dispatch} />} />
-          <Route path="/game" element={<Game state={state} dispatch={dispatch} />} />
-        </Routes>
-        <div className="nav">
-          <button onClick={() => window.location.href = '/'}>首页</button>
-          <button onClick={() => window.location.href = '/checkin'}>打卡</button>
-          <button onClick={() => window.location.href = '/stats'}>统计</button>
-          <button onClick={() => window.location.href = '/achievements'}>成就</button>
-          <button onClick={() => window.location.href = '/settings'}>设置</button>
-          <button onClick={() => window.location.href = '/game'}>游戏</button>
-        </div>
-      </div>
-    </BrowserRouter>
+  return React.createElement(BrowserRouter, null,
+    React.createElement('div', { className: 'container' },
+      React.createElement(Clock, { dispatch: dispatch }),
+      React.createElement('div', { className: 'lang-switch' },
+        React.createElement('button', { onClick: () => dispatch({ type: 'SET_LANG', payload: 'zh' }) }, '中文'),
+        React.createElement('button', { onClick: () => dispatch({ type: 'SET_LANG', payload: 'en' }) }, 'English')
+      ),
+      React.createElement(Routes, null,
+        React.createElement(Route, { path: '/', element: React.createElement(Home, { state: state, dispatch: dispatch }) }),
+        React.createElement(Route, { path: '/checkin', element: React.createElement(CheckIn, { state: state, dispatch: dispatch }) }),
+        React.createElement(Route, { path: '/stats', element: React.createElement(Stats, { state: state }) }),
+        React.createElement(Route, { path: '/achievements', element: React.createElement(Achievements, { state: state, dispatch: dispatch }) }),
+        React.createElement(Route, { path: '/settings', element: React.createElement(Settings, { state: state, dispatch: dispatch }) }),
+        React.createElement(Route, { path: '/game', element: React.createElement(Game, { state: state, dispatch: dispatch }) })
+      ),
+      React.createElement('div', { className: 'nav' },
+        React.createElement('button', { onClick: () => window.location.href = '/' }, '首页'),
+        React.createElement('button', { onClick: () => window.location.href = '/checkin' }, '打卡'),
+        React.createElement('button', { onClick: () => window.location.href = '/stats' }, '统计'),
+        React.createElement('button', { onClick: () => window.location.href = '/achievements' }, '成就'),
+        React.createElement('button', { onClick: () => window.location.href = '/settings' }, '设置'),
+        React.createElement('button', { onClick: () => window.location.href = '/game' }, '游戏')
+      )
+    )
   );
 }
 
-ReactDOM.render(<App />, document.getElementById('main-container'));
+try {
+  ReactDOM.render(React.createElement(App), document.getElementById('main-container'));
+} catch (e) {
+  console.error('Render error:', e);
+}
