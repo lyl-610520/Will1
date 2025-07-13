@@ -5,18 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#4A90E2">
   <title>时光花园 - 打卡应用</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="manifest" href="/manifest.json">
 </head>
 <body>
   <div id="main-container"></div>
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.min.js"></script>
   <script src="https://unpkg.com/chart.js@4/dist/chart.umd.js"></script>
   <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
   <script src="https://unpkg.com/lottie-web@5/build/player/lottie.min.js"></script>
-  <script src="app.js"></script>
+  <script src="/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').then(() => console.log('Service Worker registered')).catch(err => console.error('Service Worker error:', err));
@@ -25,8 +24,10 @@
       Notification.requestPermission().then(permission => console.log('Notification permission:', permission));
     }
     window.addEventListener('load', () => {
-      console.log('Page loaded, checking container:', document.getElementById('main-container'));
-      if (!document.getElementById('main-container')) console.error('Main container not found!');
+      console.log('Page loaded, React:', window.React, 'Container:', document.getElementById('main-container'));
+      if (!window.React || !document.getElementById('main-container')) {
+        document.body.innerHTML += '<div style="color:red">加载错误，请检查控制台！</div>';
+      }
     });
   </script>
 </body>
